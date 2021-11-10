@@ -69,16 +69,16 @@ towns = {'Абиджан': 2, 'Аддис-Абеба': 0, 'Аккра': 21, 'А�
 class AddClock(QWidget):
     def __init__(self, added_towns: list[str], main_window):
         super(AddClock, self).__init__()
-        uic.loadUi(r'C:\not_clock\ui_files\add_clock.ui', self)
+        uic.loadUi(r'..\ui_files\add_clock.ui', self)
         self.added_towns = added_towns
         self.main_window = main_window
         self.center()
         self.initUI()
 
     def initUI(self):
-        self.setStyleSheet('background-color: #061262;')
+        self.setStyleSheet('background-color: #192480;')
 
-        self.come_back.setIcon(QIcon(r'C:\not_clock\images\come_back.jpg'))
+        self.come_back.setIcon(QIcon(r'..\images\come_back.jpg'))
         self.come_back.clicked.connect(self.come_back_clicked)
 
         self.town_list = list()
@@ -109,7 +109,7 @@ class AddClock(QWidget):
             self.town_list.append(check_box)
 
     def come_back_clicked(self):
-        self.main_window.change_clock_list([self.town_list[i].text() for i in range(len(towns))
+        self.main_window.clock_list_changed([self.town_list[i].text() for i in range(len(towns))
                                             if self.town_list[i].isChecked()])
 
         self.close()
@@ -122,14 +122,14 @@ class AddClock(QWidget):
 class Clock(QWidget):
     def __init__(self):
         super(Clock, self).__init__()
-        uic.loadUi(r'C:\not_clock\ui_files\clock.ui', self)
+        uic.loadUi(r'..\ui_files\clock.ui', self)
         self.center()
         self.initUI()
 
     def initUI(self):
-        self.setStyleSheet('background-color: #061262;')
+        self.setStyleSheet('background-color: #192480;')
 
-        self.con = connect(r'C:\not_clock\data\clocks_db.sqlite')
+        self.con = connect(r'..\data\clocks_db.sqlite')
         self.cur = self.con.cursor()
 
         self.added_towns = [town[0] for town in
@@ -139,7 +139,7 @@ class Clock(QWidget):
         self.current_time.setStyleSheet('color: grey')
 
         timer = QTimer(self)
-        timer.timeout.connect(self.show_time)
+        timer.timeout.connect(self.check_time)
         timer.start(1000)
 
         self.add_clock = QPushButton(self)
@@ -171,13 +171,13 @@ class Clock(QWidget):
 
         self.clocks.addWidget(self.scroll_area)
 
-        self.change_clock_list(self.added_towns)
+        self.clock_list_changed(self.added_towns)
 
     def add_clock_clicked(self):
         self.add_clock_window = AddClock(self.added_towns, self)
         self.add_clock_window.show()
 
-    def change_clock_list(self, added_towns: list[str]):
+    def clock_list_changed(self, added_towns: list[str]):
         self.added_towns = added_towns
         self.time_set = set()
 
@@ -204,7 +204,7 @@ class Clock(QWidget):
 
             self.time_set.add(time_label)
 
-    def show_time(self):
+    def check_time(self):
         current_time = QTime.currentTime().toString('hh:mm')
         if current_time != self.current_time.text():
             self.current_time.setText(current_time)

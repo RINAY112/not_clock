@@ -13,16 +13,16 @@
   <property name="windowTitle">
    <string>Alarm clock</string>
   </property>
-  <widget class="QWidget" name="formLayoutWidget">
+  <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
      <width>321</width>
-     <height>881</height>
+     <height>841</height>
     </rect>
    </property>
-   <layout class="QFormLayout" name="alarm_clocks"/>
+   <layout class="QVBoxLayout" name="alarm_clocks"/>
   </widget>
  </widget>
  <resources/>
