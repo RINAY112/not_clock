@@ -2,10 +2,9 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QDesktopWidget, QPushButton, QCheckBox,
                              QFormLayout, QScrollArea, QHBoxLayout)
 from PyQt5 import uic
-from PyQt5.QtCore import QTimer, Qt, QTime
+from PyQt5.QtCore import QTimer, QTime
 from PyQt5.QtGui import QIcon
 from sqlite3 import connect
-from win10toast import ToastNotifier
 from plyer import notification
 
 
@@ -18,11 +17,16 @@ class GetTime(QWidget):
         self.initUI()
 
     def initUI(self):
+        self.ok.setStyleSheet('border: none; color: red; font: 18pt;')
         self.ok.clicked.connect(self.ok_clicked)
 
+        self.time.setStyleSheet('border: none; color: grey; font: 24pt;')
+
+        self.setStyleSheet('background-color: #192480;')
+
     def ok_clicked(self):
-        self.parent.time_list_changed(self.parent.added_alarm_clocks + [(self.time.text(), 1)])
-        self.close()
+        self.parent.added_alarm_clocks[self.time.text()] = 1
+        self.parent.time_list_changed(self)
 
     def center(self):
         qr = self.frameGeometry()
@@ -44,8 +48,8 @@ class AlarmClock(QWidget):
         self.con = connect(r'..\data\alarm_clocks_db.sqlite')
         self.cur = self.con.cursor()
 
-        self.added_alarm_clocks = self.cur.execute(
-            'SELECT time, is_enable FROM alarm_clocks').fetchall()
+        self.added_alarm_clocks = dict(self.cur.execute('SELECT time, is_enable '
+                                                    'FROM alarm_clocks').fetchall())
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.check_time)
@@ -82,7 +86,7 @@ class AlarmClock(QWidget):
 
         self.alarm_clocks.addWidget(self.scroll_area)
 
-        self.time_list_changed(self.added_alarm_clocks)
+        self.time_list_changed()
 
     def add_alarm_clock_clicked(self):
         self.dlg = GetTime(self)
@@ -100,15 +104,15 @@ class AlarmClock(QWidget):
                                       message='Будильник сработал',
                                       timeout=10)
 
-    def time_list_changed(self, alarm_clocks):
-        self.added_alarm_clocks = alarm_clocks
-
+    def time_list_changed(self, add_time_window=None):
+        if add_time_window is not None:
+            add_time_window.close()
         self.alarm_clock_list = dict()
 
         while self.scroll_layout.count():
             self.scroll_layout.itemAt(0).widget().setParent(None)
 
-        for time, is_checked in alarm_clocks:
+        for time, is_checked in self.added_alarm_clocks.items():
             alarm_clock = QHBoxLayout()
             time = QCheckBox(time)
             time.setStyleSheet(r'QCheckBox::indicator:unchecked {'
@@ -121,6 +125,7 @@ class AlarmClock(QWidget):
                                r'   color: grey;'
                                r'   font: 17pt;'
                                r'}')
+            time.clicked.connect(self.checked_changed)
             time.setChecked(is_checked)
             alarm_clock.addWidget(time)
 
@@ -137,10 +142,12 @@ class AlarmClock(QWidget):
 
             self.alarm_clock_list[delete] = widget
 
+    def checked_changed(self):
+        self.added_alarm_clocks[self.sender().text()] = self.sender().isChecked()
+
     def delete_alarm_clock(self):
         widget = self.alarm_clock_list[self.sender()]
-        clock = widget.layout().itemAt(0).widget()
-        del self.added_alarm_clocks[self.added_alarm_clocks.index((clock.text(), clock.isChecked()))]
+        del self.added_alarm_clocks[widget.layout().itemAt(0).widget().text()]
         widget.setParent(None)
         del self.alarm_clock_list[self.sender()]
 

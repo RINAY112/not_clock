@@ -14,7 +14,7 @@
    <string>Enter time</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color: #192480;</string>
+   <string notr="true"/>
   </property>
   <widget class="QPushButton" name="ok">
    <property name="geometry">
@@ -26,9 +26,7 @@
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">border: none;
-color: red;
-font: 18pt;</string>
+    <string notr="true"/>
    </property>
    <property name="text">
     <string>Ok</string>
@@ -44,9 +42,7 @@ font: 18pt;</string>
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">border: none;
-color: grey;
-font: 24pt;</string>
+    <string notr="true"/>
    </property>
    <property name="displayFormat">
     <string>HH:mm</string>
