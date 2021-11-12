@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QDesktopWidget, QPushButton, QInputDialog,
                              QCheckBox, QScrollArea, QFormLayout, QHBoxLayout, QLabel)
 from PyQt5 import uic
-from PyQt5.QtCore import QTime, QTimer, Qt
+from PyQt5.QtCore import QTime, QTimer, Qt, QSize
 from PyQt5.QtGui import QIcon
 from sqlite3 import connect
 
@@ -120,8 +120,8 @@ class AddClock(QWidget):
 
 
 class Clock(QWidget):
-    def __init__(self):
-        super(Clock, self).__init__()
+    def __init__(self, parent=None):
+        super(Clock, self).__init__(parent)
         uic.loadUi(r'..\ui_files\clock.ui', self)
         self.center()
         self.initUI()
@@ -134,6 +134,12 @@ class Clock(QWidget):
 
         self.added_towns = [town[0] for town in
                             self.cur.execute('SELECT title FROM added_towns').fetchall()]
+
+        for name in ('clock', 'alarm_clock', 'timer', 'stopwatch'):
+            exec(rf"self.open_{name}.setIcon(QIcon(r'..\images\{name}.jpg'))")
+            exec(f"self.open_{name}.setStyleSheet('border: none;')")
+            exec(f"self.open_{name}.setIconSize(QSize(81, 61))")
+            exec(f'self.open_{name}.clicked.connect(self.open_other_window)')
 
         self.current_time.setText(QTime.currentTime().toString('hh:mm'))
         self.current_time.setStyleSheet('color: grey')
@@ -176,6 +182,12 @@ class Clock(QWidget):
     def add_clock_clicked(self):
         self.add_clock_window = AddClock(self.added_towns, self)
         self.add_clock_window.show()
+
+    def open_other_window(self):
+        sender = self.sender().objectName()
+        if sender != 'open_clock':
+            self.close()
+            self.parent().open_other_window(sender)
 
     def clock_list_changed(self, added_towns: list[str]):
         self.added_towns = added_towns
@@ -225,12 +237,3 @@ class Clock(QWidget):
     def center(self):
         qr = self.frameGeometry()
         qr.moveCenter(QDesktopWidget().availableGeometry().center())
-
-
-def start():
-    app = QApplication(sys.argv)
-    clock = Clock()
-    clock.show()
-    sys.exit(app.exec_())
-
-start()

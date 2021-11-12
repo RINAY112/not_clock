@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QDesktopWidget, QPushButton, QCheckBox,
                              QFormLayout, QScrollArea, QHBoxLayout)
 from PyQt5 import uic
-from PyQt5.QtCore import QTimer, QTime
+from PyQt5.QtCore import QTimer, QTime, QSize
 from PyQt5.QtGui import QIcon
 from sqlite3 import connect
 from plyer import notification
@@ -34,14 +34,20 @@ class GetTime(QWidget):
 
 
 class AlarmClock(QWidget):
-    def __init__(self):
-        super(AlarmClock, self).__init__()
+    def __init__(self, parent=None):
+        super(AlarmClock, self).__init__(parent)
         uic.loadUi(r'..\ui_files\alarm_clock.ui', self)
         self.center()
         self.initUI()
 
     def initUI(self):
         self.setStyleSheet('background-color: #192480;')
+
+        for name in ('clock', 'alarm_clock', 'timer', 'stopwatch'):
+            exec(rf"self.open_{name}.setIcon(QIcon(r'..\images\{name}.jpg'))")
+            exec(f"self.open_{name}.setStyleSheet('border: none;')")
+            exec(f"self.open_{name}.setIconSize(QSize(81, 61))")
+            exec(f'self.open_{name}.clicked.connect(self.open_other_window)')
         
         self.toast = notification
 
@@ -91,6 +97,12 @@ class AlarmClock(QWidget):
     def add_alarm_clock_clicked(self):
         self.dlg = GetTime(self)
         self.dlg.show()
+
+    def open_other_window(self):
+        sender = self.sender().objectName()
+        if sender != 'open_alarm_clock':
+            self.close()
+            self.parent().open_other_window(sender)
 
     def check_time(self):
         current_time = QTime.currentTime().toString('hh:mm')
@@ -142,15 +154,6 @@ class AlarmClock(QWidget):
 
             self.alarm_clock_list[delete] = widget
 
-    def checked_changed(self):
-        self.added_alarm_clocks[self.sender().text()] = self.sender().isChecked()
-
-    def delete_alarm_clock(self):
-        widget = self.alarm_clock_list[self.sender()]
-        del self.added_alarm_clocks[widget.layout().itemAt(0).widget().text()]
-        widget.setParent(None)
-        del self.alarm_clock_list[self.sender()]
-
     def closeEvent(self, a0):
         self.cur.execute('DELETE FROM alarm_clocks')
         for id, widget in enumerate(self.alarm_clock_list.values(), 1):
@@ -164,8 +167,11 @@ class AlarmClock(QWidget):
         qr = self.frameGeometry()
         qr.moveCenter(QDesktopWidget().availableGeometry().center())
 
+    def checked_changed(self):
+        self.added_alarm_clocks[self.sender().text()] = self.sender().isChecked()
 
-app = QApplication(sys.argv)
-clock = AlarmClock()
-clock.show()
-sys.exit(app.exec_())
+    def delete_alarm_clock(self):
+        widget = self.alarm_clock_list[self.sender()]
+        del self.added_alarm_clocks[widget.layout().itemAt(0).widget().text()]
+        widget.setParent(None)
+        del self.alarm_clock_list[self.sender()]
